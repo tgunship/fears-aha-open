@@ -46,7 +46,7 @@ DEFAULT_NEEDS = [
 
 st.title("🎯 怖れアハ！")
 # タイトルの直下に小さくバージョン情報を表示（margin-bottomを兄弟アプリと統一）
-st.markdown("<div style='font-size: 14px; color: #888888; margin-top: -15px; margin-bottom: 10px;'>全てオープン版 Ver1.01</div>", unsafe_allow_html=True)
+st.markdown("<div style='font-size: 14px; color: #888888; margin-top: -15px; margin-bottom: 10px;'>全てオープン版 Ver1.00</div>", unsafe_allow_html=True)
 
 # --- 2. 初期設定 ---
 if 'candidates' not in st.session_state:
