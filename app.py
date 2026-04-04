@@ -96,7 +96,7 @@ if st.session_state.finished:
         st.rerun()
 
     # --- 新規追加：別ウィンドウで開くリンクボタン ---
-    st.link_button("今のあなたのニーズを見つける", "https://nvc-app-q3zexvxux368x4sftozxox.streamlit.app/", use_container_width=True)
+    st.link_button("今のあなたのニーズを見つける", "https://needs-aha-open-ttvod6di6cz9uww49pbxit.streamlit.app/", use_container_width=True)
 
 else:
     # === 選択画面 ===
