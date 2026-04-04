@@ -1,0 +1,171 @@
+# Copyright © 2026 Takeshi Uchida
+
+import streamlit as st
+import random
+
+# --- アプリ全体の背景色と基本デザインの設定 ---
+st.markdown("""
+    <style>
+    /* 画面全体の背景色を柔らかなアイボリーに */
+    .stApp {
+        background-color: #FDFBF7;
+    }
+    /* st.infoボックスのデザイン調整（背景をさらに薄い青に、兄弟アプリと統一） */
+    .stAlert {
+        background-color: #F8FBFF;
+        border: 1px solid #E6F0FA;
+        color: #333333;
+    }
+    /* チェックボックスのテキストを少し大きく */
+    .stCheckbox label span {
+        font-size: 18px !important;
+        color: #4A4A4A;
+    }
+    /* Streamlitデフォルトの不要な上下余白を削る（兄弟アプリと揃える） */
+    .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 1rem !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- 1. 怖れリスト ---
+DEFAULT_NEEDS = [
+    "失敗", "未達成・敗北", "無駄", "妥協", "無責任・不誠実",
+    "コントロール不可・予測不能", "暴走", "停滞", "キャパオーバー", "老い・衰え",
+    "対立", "誤解", "人を傷つける・不快にする", "制限される・支配される", "搾取される・利用される",
+    "依存", "不公平・理不尽", "平凡", "つまらない人間・つまらない人生", "役割の喪失",
+    "期待外れ・ガッカリ", "批判・否定・認められない", "責められる", "攻撃される", "嫌われる",
+    "見下される・軽く見られる", "粗末に扱われる", "嫉妬される", "孤立・仲間外れ", "無関心",
+    "分離・断絶", "裏切り", "わかられない・受け取られない", "頼れない・助けてくれない", "報われない",
+    "本性の露呈", "異端", "迷惑", "自分への嘘", "無価値",
+    "無力", "存在意義の喪失", "絶対的な孤独・隔絶", "居場所の喪失", "愛されない",
+    "魅力が無い・醜い", "存在の否定", "見捨てられる", "原罪感", "欠陥・不十分・未熟",
+    "空っぽ", "自己崩壊", "カオス", "絶望", "惨め"
+]
+
+st.title("🎯 怖れアハ！")
+# タイトルの直下に小さくバージョン情報を表示（margin-bottomを兄弟アプリと統一）
+st.markdown("<div style='font-size: 14px; color: #888888; margin-top: -15px; margin-bottom: 10px;'>全てオープン版 Ver1.01</div>", unsafe_allow_html=True)
+
+# --- 2. 初期設定 ---
+if 'candidates' not in st.session_state:
+    st.session_state.candidates = DEFAULT_NEEDS.copy()
+    random.shuffle(st.session_state.candidates) # 最初だけランダムに並び替え
+    st.session_state.round_count = 1
+    st.session_state.finished = False
+
+# 候補が1つだけになったら終了判定
+if len(st.session_state.candidates) == 1:
+    st.session_state.finished = True
+
+# --- 3. 画面表示（結果発表 または 選択画面） ---
+if st.session_state.finished:
+    # === 結果画面 ===
+    st.balloons() # お祝いのエフェクト
+    
+    final_need = st.session_state.candidates[0]
+    
+    # メッセージ
+    st.markdown("<h2 style='text-align: center; color: #D35400;'>アハ！ 見つかりましたね！</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 18px; color: #666666;'>今のあなたの心のど真ん中にある怖れは...</p>", unsafe_allow_html=True)
+    
+    # 結果を強調する特別なカードデザイン
+    st.markdown(
+        f"""
+        <div style="
+            padding: 50px 20px; 
+            background: linear-gradient(135deg, #FFF0D1 0%, #FFDCA8 100%); 
+            border: 2px solid #FFC266;
+            border-radius: 20px; 
+            text-align: center; 
+            box-shadow: 0 8px 15px rgba(211, 84, 0, 0.15);
+            margin: 30px 0;">
+            <h1 style="color: #C0392B; margin:0; font-size: 48px; text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">
+                {final_need}
+            </h1>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    
+    if st.button("もう一度、心に問いかける", use_container_width=True):
+        # セッション状態をクリアしてリセット
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
+
+else:
+    # === 選択画面 ===
+    
+    # ユーザーに「最終的に1つに絞る」というゴールを伝える案内文
+    st.info(
+        "💡 **最終的に「これだ！」という1つに絞り込んでいきます。**\n\n"
+        "今のリストから、直感でピンときたものを**いくつでも**チェックして、「しぼりこみ！」を押してください。"
+    )
+    st.markdown(f"ラウンド {st.session_state.round_count}： 現在 **{len(st.session_state.candidates)}個**の候補があります。")
+    
+    # フォームを使用して、ボタンが押されるまで画面を更新しないようにする
+    with st.form("selection_form"):
+        # 3列のグリッド表示にする
+        cols = st.columns(3)
+        selected_needs = []
+        
+        # 候補リストをチェックボックスとして表示
+        for i, need in enumerate(st.session_state.candidates):
+            with cols[i % 3]: # 0,1,2 の列に順番に配置
+                # keyにラウンド数を入れることで、ラウンドが変わるごとにチェックをリセットする
+                if st.checkbox(need, key=f"chk_{need}_{st.session_state.round_count}"):
+                    selected_needs.append(need)
+        
+        st.write("") # 少し余白を空ける
+        
+        # 送信ボタン
+        submitted = st.form_submit_button("しぼりこみ！", type="primary", use_container_width=True)
+        
+        # ボタンが押されたあとの処理
+        if submitted:
+            if len(selected_needs) == 0:
+                # 1つも選ばれなかった場合の警告（画面は進まない）
+                st.error("⚠️ 最低でも1つはチェックしてください！")
+            else:
+                # 選ばれたものだけを次の候補リストに上書き
+                st.session_state.candidates = selected_needs
+                st.session_state.round_count += 1
+                st.rerun() # 画面を更新して次のラウンドへ
+
+# --- 4. コピーライト表示（フッター） ---
+st.markdown(
+    """
+    <style>
+    /* インスタリンク用の控えめなスタイル */
+    .insta-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #999999;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.3s ease;
+        margin-bottom: 4px;
+    }
+    .insta-link:hover {
+        color: #666666;
+    }
+    </style>
+    
+    <div style="text-align: center; padding-top: 25px; padding-bottom: 25px;"> <div>
+            <a href="https://www.instagram.com/kokochi1205/" target="_blank" rel="noopener noreferrer" class="insta-link">
+                <svg style="width: 18px; height: 18px; fill: currentColor;" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clip-rule="evenodd" />
+                </svg>
+                自分をみつめる空間『ここち』インスタ
+            </a>
+        </div>
+        <div style="color: #999999; font-size: 14px;">
+            Copyright © 2026 Takeshi Uchida
+        </div>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
